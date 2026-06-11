@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/products", productRoutes);
 app.use("/api/purchases", purchaseRoutes);
-app.use("api/sales", saleRoutes);
+app.use("/api/sales", saleRoutes);
 
 mongoose
   .connect(process.env.MONGODB_URI)
