@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      uppercase: true,
     },
 
     productName: {
@@ -49,17 +50,20 @@ const productSchema = new mongoose.Schema(
 
     unit: {
       type: String,
+      enum: ["PCS", "KG", "LTR", "BOX", "PACK", "DOZEN", "METER"],
       default: "PCS",
     },
 
     gstRate: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     minStock: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     isActive: {
