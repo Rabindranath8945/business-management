@@ -60,15 +60,12 @@ router.post("/import", upload.single("file"), async (req, res) => {
     let skipped = 0;
 
     for (const row of rows) {
-      const name = row["Item Name"];
+      const name = row["Product Name"];
 
       if (!name) continue;
 
       const existing = await Product.findOne({
-        productName: {
-          $regex: `^${name.trim()}$`,
-          $options: "i",
-        },
+        productNo: row["Product No"],
       });
 
       if (existing) {
@@ -81,23 +78,28 @@ router.post("/import", upload.single("file"), async (req, res) => {
       const productNo = "P" + String(count + 1).padStart(3, "0");
 
       await Product.create({
-        productNo,
-        productName: name.trim(),
-        category: "",
-        hsn: "",
-        purchasePrice: isNaN(Number(row["Purchase Price"]))
-          ? 0
-          : Number(row["Purchase Price"]),
+        productNo:
+          row["Product No"] || "P" + String(count + 1).padStart(3, "0"),
 
-        salePrice: isNaN(Number(row["Sale Price"]))
-          ? 0
-          : Number(row["Sale Price"]),
+        productName: row["Product Name"]?.trim(),
 
-        stock: isNaN(Number(row["Stock"])) ? 0 : Number(row["Stock"]),
-        unit: "PCS",
-        gstRate: 0,
-        minStock: 0,
-        isActive: true,
+        category: row["Category"] || "",
+
+        hsn: String(row["HSN"] || ""),
+
+        purchasePrice: Number(row["Purchase Price"]) || 0,
+
+        salePrice: Number(row["Sale Price"]) || 0,
+
+        stock: Number(row["Stock"]) || 0,
+
+        unit: row["Unit"] || "PCS",
+
+        gstRate: Number(row["GST Rate"]) || 0,
+
+        minStock: Number(row["Min Stock"]) || 0,
+
+        isActive: String(row["Active"]).toLowerCase() === "yes",
       });
 
       imported++;
