@@ -55,7 +55,7 @@ router.post("/import", upload.single("file"), async (req, res) => {
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet);
-
+    console.log(rows[0]); // Debug Excel headers
     let imported = 0;
     let skipped = 0;
 
