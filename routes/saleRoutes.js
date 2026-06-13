@@ -23,9 +23,17 @@ router.post("/", async (req, res) => {
     }
 
     // Generate Invoice No
-    const count = await Sale.countDocuments();
+    const lastSale = await Sale.findOne().sort({
+      createdAt: -1,
+    });
 
-    const invoiceNo = "INV" + String(count + 1).padStart(3, "0");
+    let nextNumber = 1;
+
+    if (lastSale && lastSale.invoiceNo) {
+      nextNumber = parseInt(lastSale.invoiceNo.replace("INV", "")) + 1;
+    }
+
+    const invoiceNo = "INV" + String(nextNumber).padStart(3, "0");
 
     let saleItems = [];
     let subTotal = 0;
@@ -103,7 +111,7 @@ router.get("/", async (req, res) => {
 // Get Single Sale
 router.get("/:id", async (req, res) => {
   try {
-    const sale = await Sale.findById(req.params.id);
+    const sale = await Sale.findById(req.params.id).populate("items.product");
 
     if (!sale) {
       return res.status(404).json({
