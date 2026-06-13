@@ -87,17 +87,17 @@ router.post("/import", upload.single("file"), async (req, res) => {
 
         hsn: String(row["HSN"] || ""),
 
-        purchasePrice: Number(row["Purchase Price"]) || 0,
+        purchasePrice: Math.max(0, Number(row["Purchase Price"]) || 0),
 
-        salePrice: Number(row["Sale Price"]) || 0,
+        salePrice: Math.max(0, Number(row["Sale Price"]) || 0),
 
-        stock: Number(row["Stock"]) || 0,
+        stock: Math.max(0, Number(row["Stock"]) || 0),
 
         unit: row["Unit"] || "PCS",
 
-        gstRate: Number(row["GST Rate"]) || 0,
+        gstRate: Math.max(0, Number(row["GST Rate"]) || 0),
 
-        minStock: Number(row["Min Stock"]) || 0,
+        minStock: Math.max(0, Number(row["Min Stock"]) || 0),
 
         isActive: String(row["Active"]).toLowerCase() === "yes",
       });
