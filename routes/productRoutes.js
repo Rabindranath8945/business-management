@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const XLSX = require("xlsx");
+const upload = require("../middleware/upload");
 
 // Add Product
 router.post("/", async (req, res) => {
   try {
     const lastProduct = await Product.findOne().sort({
-      createdAt: -1,
+      productNo: -1,
     });
 
     let nextNumber = 1;
@@ -90,6 +92,60 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(product);
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
+// Upload Products via Excel
+router.post("/import", upload.single("file"), async (req, res) => {
+  try {
+    const workbook = XLSX.read(req.file.buffer, {
+      type: "buffer",
+    });
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    let imported = 0;
+    let skipped = 0;
+
+    for (const row of rows) {
+      const name = row["Item Name"];
+
+      if (!name) continue;
+
+      const exists = await Product.findOne({
+        productName: name,
+      });
+
+      if (exists) {
+        skipped++;
+        continue;
+      }
+
+      const count = await Product.countDocuments();
+
+      const productNo = "P" + String(count + 1).padStart(3, "0");
+
+      await Product.create({
+        productNo,
+        productName: name,
+        salePrice: Number(row["Sale Price"] || 0),
+        purchasePrice: Number(row["Purchase Price"] || 0),
+        stock: Number(row["Stock"] || 0),
+      });
+
+      imported++;
+    }
+
+    res.json({
+      imported,
+      skipped,
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,
