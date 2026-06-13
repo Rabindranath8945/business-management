@@ -41,6 +41,81 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Upload Products via Excel
+router.post("/import", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Please upload an Excel file",
+      });
+    }
+    const workbook = XLSX.read(req.file.buffer, {
+      type: "buffer",
+    });
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    let imported = 0;
+    let skipped = 0;
+
+    for (const row of rows) {
+      const name = row["Item Name"];
+
+      if (!name) continue;
+
+      const existing = await Product.findOne({
+        productName: {
+          $regex: `^${name.trim()}$`,
+          $options: "i",
+        },
+      });
+
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      const count = await Product.countDocuments();
+
+      const productNo = "P" + String(count + 1).padStart(3, "0");
+
+      await Product.create({
+        productNo,
+        productName: name.trim(),
+        category: "",
+        hsn: "",
+        purchasePrice: isNaN(Number(row["Purchase Price"]))
+          ? 0
+          : Number(row["Purchase Price"]),
+
+        salePrice: isNaN(Number(row["Sale Price"]))
+          ? 0
+          : Number(row["Sale Price"]),
+
+        stock: isNaN(Number(row["Stock"])) ? 0 : Number(row["Stock"]),
+        unit: "PCS",
+        gstRate: 0,
+        minStock: 0,
+        isActive: true,
+      });
+
+      imported++;
+    }
+
+    res.json({
+      message: "Import completed successfully",
+      imported,
+      skipped,
+      total: rows.length,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+
 // Update Products
 router.put("/:id", async (req, res) => {
   try {
@@ -92,60 +167,6 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(product);
-  } catch (err) {
-    res.status(500).json({
-      message: err.message,
-    });
-  }
-});
-
-// Upload Products via Excel
-router.post("/import", upload.single("file"), async (req, res) => {
-  try {
-    const workbook = XLSX.read(req.file.buffer, {
-      type: "buffer",
-    });
-
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-    const rows = XLSX.utils.sheet_to_json(sheet);
-
-    let imported = 0;
-    let skipped = 0;
-
-    for (const row of rows) {
-      const name = row["Item Name"];
-
-      if (!name) continue;
-
-      const exists = await Product.findOne({
-        productName: name,
-      });
-
-      if (exists) {
-        skipped++;
-        continue;
-      }
-
-      const count = await Product.countDocuments();
-
-      const productNo = "P" + String(count + 1).padStart(3, "0");
-
-      await Product.create({
-        productNo,
-        productName: name,
-        salePrice: Number(row["Sale Price"] || 0),
-        purchasePrice: Number(row["Purchase Price"] || 0),
-        stock: Number(row["Stock"] || 0),
-      });
-
-      imported++;
-    }
-
-    res.json({
-      imported,
-      skipped,
-    });
   } catch (err) {
     res.status(500).json({
       message: err.message,
