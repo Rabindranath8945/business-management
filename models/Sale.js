@@ -6,16 +6,19 @@ const saleSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
 
     customerName: {
       type: String,
       required: true,
+      trim: true,
     },
 
     phone: {
       type: String,
       default: "",
+      trim: true,
     },
 
     items: [
@@ -26,8 +29,15 @@ const saleSchema = new mongoose.Schema(
           required: true,
         },
 
-        productNo: String,
-        productName: String,
+        productNo: {
+          type: String,
+          default: "",
+        },
+
+        productName: {
+          type: String,
+          default: "",
+        },
 
         qty: {
           type: Number,
@@ -44,6 +54,7 @@ const saleSchema = new mongoose.Schema(
         total: {
           type: Number,
           required: true,
+          min: 0,
         },
       },
     ],
@@ -51,26 +62,31 @@ const saleSchema = new mongoose.Schema(
     subTotal: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     discount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     tax: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     grandTotal: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     note: {
       type: String,
       default: "",
+      trim: true,
     },
 
     saleDate: {

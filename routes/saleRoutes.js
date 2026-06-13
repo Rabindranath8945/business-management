@@ -9,12 +9,18 @@ router.post("/", async (req, res) => {
   try {
     const {
       customerName,
-      phone,
+      phone = "",
       items,
       discount = 0,
       tax = 0,
       note = "",
     } = req.body;
+
+    if (!customerName) {
+      return res.status(400).json({
+        message: "Customer name is required",
+      });
+    }
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -22,14 +28,14 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Generate Invoice No
+    // Generate Invoice Number
     const lastSale = await Sale.findOne().sort({
       createdAt: -1,
     });
 
     let nextNumber = 1;
 
-    if (lastSale && lastSale.invoiceNo) {
+    if (lastSale?.invoiceNo) {
       nextNumber = parseInt(lastSale.invoiceNo.replace("INV", "")) + 1;
     }
 
@@ -43,7 +49,13 @@ router.post("/", async (req, res) => {
 
       if (!product) {
         return res.status(404).json({
-          message: `Product not found`,
+          message: "Product not found",
+        });
+      }
+
+      if (item.qty <= 0) {
+        return res.status(400).json({
+          message: "Invalid quantity",
         });
       }
 
@@ -53,7 +65,7 @@ router.post("/", async (req, res) => {
         });
       }
 
-      const total = item.qty * item.salePrice;
+      const total = Number(item.qty) * Number(item.salePrice);
 
       saleItems.push({
         product: product._id,
@@ -68,10 +80,11 @@ router.post("/", async (req, res) => {
 
       // Reduce stock
       product.stock -= item.qty;
+
       await product.save();
     }
 
-    const grandTotal = subTotal - discount + tax;
+    const grandTotal = subTotal - Number(discount) + Number(tax);
 
     const sale = await Sale.create({
       invoiceNo,
@@ -93,7 +106,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get Sales
+// Get All Sales
 router.get("/", async (req, res) => {
   try {
     const sales = await Sale.find().sort({

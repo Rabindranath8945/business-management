@@ -6,42 +6,81 @@ const purchaseSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
 
     supplier: {
       type: String,
       default: "",
+      trim: true,
     },
 
-    product: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: true,
-    },
+    items: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
 
-    productNo: String,
-    productName: String,
+        productNo: {
+          type: String,
+          default: "",
+        },
 
-    qty: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
+        productName: {
+          type: String,
+          default: "",
+        },
 
-    purchasePrice: {
+        qty: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+
+        purchasePrice: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+
+        total: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+      },
+    ],
+
+    subTotal: {
       type: Number,
       required: true,
       min: 0,
     },
 
-    total: {
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    tax: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    grandTotal: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     note: {
       type: String,
       default: "",
+      trim: true,
     },
 
     purchaseDate: {
