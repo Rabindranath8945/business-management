@@ -6,7 +6,15 @@ const Setting = require("../models/Setting");
 // Get Settings
 router.get("/", async (req, res) => {
   try {
-    const setting = await Setting.findOne();
+    let setting = await Setting.findOne().sort({
+      createdAt: -1,
+    });
+
+    // Return empty object if no settings exist
+    if (!setting) {
+      setting = {};
+    }
+
     res.json(setting);
   } catch (err) {
     res.status(500).json({
@@ -15,7 +23,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Save / Update Settings
+// Create or Update Settings
 router.put("/", async (req, res) => {
   try {
     let setting = await Setting.findOne();
@@ -25,6 +33,7 @@ router.put("/", async (req, res) => {
     } else {
       setting = await Setting.findByIdAndUpdate(setting._id, req.body, {
         new: true,
+        runValidators: true,
       });
     }
 
