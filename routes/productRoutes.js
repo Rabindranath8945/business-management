@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
+    const limit = Number(req.query.limit) || 15; // Load 15 products
     const skip = (page - 1) * limit;
 
     const filter = {};
@@ -78,9 +78,10 @@ router.get("/", async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .sort({ productName: 1 })
+      .sort(sort)
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const total = await Product.countDocuments(filter);
 
@@ -88,6 +89,8 @@ router.get("/", async (req, res) => {
       products,
       hasMore: skip + products.length < total,
       total,
+      page,
+      limit,
     });
   } catch (error) {
     res.status(500).json({
