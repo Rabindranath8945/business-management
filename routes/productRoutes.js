@@ -33,18 +33,24 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 15; // Load 15 products
+    const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    const search = req.query.search || "";
     const filter = {};
 
-    let sort = { productName: 1 }; // Default A → Z
+    if (search) {
+      filter.$or = [
+        { productName: { $regex: search, $options: "i" } },
+        { productNo: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+        { hsn: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    let sort = { productName: 1 }; // A → Z default
 
     switch (req.query.sort) {
-      case "az":
-        sort = { productName: 1 };
-        break;
-
       case "za":
         sort = { productName: -1 };
         break;
@@ -65,14 +71,6 @@ router.get("/", async (req, res) => {
         sort = { salePrice: -1 };
         break;
 
-      case "stockLow":
-        sort = { stock: 1 };
-        break;
-
-      case "stockHigh":
-        sort = { stock: -1 };
-        break;
-
       default:
         sort = { productName: 1 };
     }
@@ -87,14 +85,13 @@ router.get("/", async (req, res) => {
 
     res.json({
       products,
-      hasMore: skip + products.length < total,
       total,
       page,
-      limit,
+      totalPages: Math.ceil(total / limit),
     });
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({
-      message: error.message,
+      message: err.message,
     });
   }
 });
