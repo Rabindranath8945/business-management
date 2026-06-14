@@ -38,6 +38,9 @@ router.get("/", async (req, res) => {
 
     const search = req.query.search || "";
     const filter = {};
+    if (req.query.category && req.query.category !== "All") {
+      filter.category = req.query.category;
+    }
 
     if (search) {
       filter.$or = [
@@ -69,6 +72,13 @@ router.get("/", async (req, res) => {
 
       case "priceHigh":
         sort = { salePrice: -1 };
+        break;
+      case "stockLow":
+        sort = { stock: 1 };
+        break;
+
+      case "stockHigh":
+        sort = { stock: -1 };
         break;
 
       default:
