@@ -32,12 +32,36 @@ router.post("/", async (req, res) => {
 // Get Products
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find().sort({
-      createdAt: -1,
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+
+    // Alphabet filter
+    if (req.query.alphabet && req.query.alphabet !== "All") {
+      filter.productName = {
+        $regex: `^${req.query.alphabet}`,
+        $options: "i",
+      };
+    }
+
+    const products = await Product.find(filter)
+      .sort({ productName: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Product.countDocuments(filter);
+
+    res.json({
+      products,
+      hasMore: skip + products.length < total,
+      total,
     });
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
