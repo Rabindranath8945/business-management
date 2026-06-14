@@ -38,12 +38,43 @@ router.get("/", async (req, res) => {
 
     const filter = {};
 
-    // Alphabet filter
-    if (req.query.alphabet && req.query.alphabet !== "All") {
-      filter.productName = {
-        $regex: `^${req.query.alphabet}`,
-        $options: "i",
-      };
+    let sort = { productName: 1 }; // Default A → Z
+
+    switch (req.query.sort) {
+      case "az":
+        sort = { productName: 1 };
+        break;
+
+      case "za":
+        sort = { productName: -1 };
+        break;
+
+      case "newest":
+        sort = { createdAt: -1 };
+        break;
+
+      case "oldest":
+        sort = { createdAt: 1 };
+        break;
+
+      case "priceLow":
+        sort = { salePrice: 1 };
+        break;
+
+      case "priceHigh":
+        sort = { salePrice: -1 };
+        break;
+
+      case "stockLow":
+        sort = { stock: 1 };
+        break;
+
+      case "stockHigh":
+        sort = { stock: -1 };
+        break;
+
+      default:
+        sort = { productName: 1 };
     }
 
     const products = await Product.find(filter)
