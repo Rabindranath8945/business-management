@@ -235,6 +235,9 @@ exports.getDashboard = async (req, res) => {
       lowStockProducts,
 
       salesChart,
+      currentWeekTotal,
+      previousWeekTotal,
+      weeklyGrowth,
     });
   } catch (error) {
     console.error(error);
