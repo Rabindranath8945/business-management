@@ -137,7 +137,7 @@ exports.getPurchaseReport = async (req, res) => {
   }
 };
 
-exports.getStockReport = async (req, res) => {
+exports.getProductReport = async (req, res) => {
   try {
     const products = await Product.find().sort({ productName: 1 });
 
