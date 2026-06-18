@@ -11,7 +11,7 @@ exports.getDashboard = async (req, res) => {
     todayStart.setHours(0, 0, 0, 0);
 
     const todaySalesData = await Sale.find({
-      createdAt: {
+      saleDate: {
         $gte: todayStart,
       },
     });
@@ -32,7 +32,7 @@ exports.getDashboard = async (req, res) => {
     yesterdayEnd.setHours(23, 59, 59, 999);
 
     const yesterdaySalesData = await Sale.find({
-      createdAt: {
+      saleDate: {
         $gte: yesterdayStart,
         $lte: yesterdayEnd,
       },
@@ -60,7 +60,7 @@ exports.getDashboard = async (req, res) => {
     );
 
     const monthSalesData = await Sale.find({
-      createdAt: {
+      saleDate: {
         $gte: monthStart,
       },
     });
@@ -90,7 +90,7 @@ exports.getDashboard = async (req, res) => {
     );
 
     const previousMonthSalesData = await Sale.find({
-      createdAt: {
+      saleDate: {
         $gte: previousMonthStart,
         $lte: previousMonthEnd,
       },
@@ -115,7 +115,7 @@ exports.getDashboard = async (req, res) => {
     // MONTH PURCHASE
     // =========================
     const monthPurchaseData = await Purchase.find({
-      createdAt: {
+      purchaseDate: {
         $gte: monthStart,
       },
     });
@@ -151,7 +151,7 @@ exports.getDashboard = async (req, res) => {
     // =========================
     const recentSales = await Sale.find()
       .sort({
-        createdAt: -1,
+        saleDate: -1,
       })
       .limit(5);
 
@@ -179,7 +179,7 @@ exports.getDashboard = async (req, res) => {
       dayEnd.setHours(23, 59, 59, 999);
 
       const daySales = await Sale.find({
-        createdAt: {
+        saleDate: {
           $gte: dayStart,
           $lte: dayEnd,
         },
