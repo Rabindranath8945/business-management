@@ -273,3 +273,57 @@ exports.getStockValueReport = async (req, res) => {
     });
   }
 };
+exports.getInventoryMovementReport = async (req, res) => {
+  try {
+    const products = await Product.find().sort({ productName: 1 });
+
+    const purchases = await Purchase.find();
+    const sales = await Sale.find();
+
+    const report = products.map((product) => {
+      let purchasedQty = 0;
+      let soldQty = 0;
+
+      purchases.forEach((purchase) => {
+        purchase.items.forEach((item) => {
+          if (
+            item.product &&
+            item.product.toString() === product._id.toString()
+          ) {
+            purchasedQty += item.qty;
+          }
+        });
+      });
+
+      sales.forEach((sale) => {
+        sale.items.forEach((item) => {
+          if (
+            item.product &&
+            item.product.toString() === product._id.toString()
+          ) {
+            soldQty += item.qty;
+          }
+        });
+      });
+
+      return {
+        productNo: product.productNo,
+        productName: product.productName,
+        purchasedQty,
+        soldQty,
+        currentStock: product.stock,
+        netMovement: purchasedQty - soldQty,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      products: report,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
