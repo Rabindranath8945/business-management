@@ -1,5 +1,6 @@
 const Sale = require("../models/Sale");
 const Purchase = require("../models/Purchase");
+const Product = require("../models/Product");
 
 exports.getSalesReport = async (req, res) => {
   try {
@@ -36,12 +37,17 @@ exports.getSalesReport = async (req, res) => {
       totalDiscount: 0,
       totalTax: 0,
       totalQty: 0,
+      averageInvoiceValue: 0,
     };
 
     sales.forEach((sale) => {
       summary.totalSales += sale.grandTotal || 0;
       summary.totalDiscount += sale.discount || 0;
       summary.totalTax += sale.tax || 0;
+      summary.averageInvoiceValue =
+        summary.totalInvoices > 0
+          ? Number((summary.totalSales / summary.totalInvoices).toFixed(2))
+          : 0;
 
       sale.items.forEach((item) => {
         summary.totalQty += item.qty || 0;
@@ -123,6 +129,69 @@ exports.getPurchaseReport = async (req, res) => {
     });
   } catch (error) {
     console.error("Purchase Report Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getStockReport = async (req, res) => {
+  try {
+    const products = await Product.find().sort({ productName: 1 });
+
+    const summary = {
+      totalProducts: products.length,
+      totalStockQty: 0,
+      totalStockValue: 0,
+      lowStockCount: 0,
+      outOfStockCount: 0,
+    };
+
+    const stockReport = products.map((product) => {
+      const stockValue = product.stock * product.purchasePrice;
+
+      summary.totalStockQty += product.stock;
+      summary.totalStockValue += stockValue;
+
+      if (product.stock <= product.minStock) {
+        summary.lowStockCount++;
+      }
+
+      if (product.stock <= 0) {
+        summary.outOfStockCount++;
+      }
+
+      let status = "In Stock";
+
+      if (product.stock <= 0) {
+        status = "Out Of Stock";
+      } else if (product.stock <= product.minStock) {
+        status = "Low Stock";
+      }
+
+      return {
+        _id: product._id,
+        productNo: product.productNo,
+        productName: product.productName,
+        category: product.category,
+        stock: product.stock,
+        minStock: product.minStock,
+        purchasePrice: product.purchasePrice,
+        salePrice: product.salePrice,
+        stockValue,
+        status,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      summary,
+      products: stockReport,
+    });
+  } catch (error) {
+    console.error("Stock Report Error:", error);
 
     res.status(500).json({
       success: false,
