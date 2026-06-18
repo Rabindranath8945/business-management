@@ -137,7 +137,7 @@ exports.getPurchaseReport = async (req, res) => {
   }
 };
 
-exports.getProductReport = async (req, res) => {
+exports.getStockReport = async (req, res) => {
   try {
     const products = await Product.find().sort({ productName: 1 });
 
@@ -193,6 +193,80 @@ exports.getProductReport = async (req, res) => {
   } catch (error) {
     console.error("Stock Report Error:", error);
 
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getLowStockReport = async (req, res) => {
+  try {
+    const products = await Product.find({
+      minStock: { $gt: 0 },
+    }).sort({ productName: 1 });
+
+    const lowStockProducts = products.filter((p) => p.stock <= p.minStock);
+
+    res.status(200).json({
+      success: true,
+      count: lowStockProducts.length,
+      products: lowStockProducts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getOutOfStockReport = async (req, res) => {
+  try {
+    const products = await Product.find({
+      stock: { $lte: 0 },
+    }).sort({ productName: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getStockValueReport = async (req, res) => {
+  try {
+    const products = await Product.find().sort({ productName: 1 });
+
+    let totalStockValue = 0;
+
+    const data = products.map((product) => {
+      const stockValue = product.stock * product.purchasePrice;
+
+      totalStockValue += stockValue;
+
+      return {
+        _id: product._id,
+        productNo: product.productNo,
+        productName: product.productName,
+        stock: product.stock,
+        purchasePrice: product.purchasePrice,
+        stockValue,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      totalStockValue,
+      products: data,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,
