@@ -198,6 +198,25 @@ exports.getDashboard = async (req, res) => {
       });
     }
 
+    // Current Week Total
+    const currentWeekTotal = salesChart.reduce(
+      (sum, item) => sum + item.sales,
+      0,
+    );
+
+    // Temporary
+    const previousWeekTotal = 0;
+
+    const weeklyGrowth =
+      previousWeekTotal === 0
+        ? 100
+        : Number(
+            (
+              ((currentWeekTotal - previousWeekTotal) / previousWeekTotal) *
+              100
+            ).toFixed(1),
+          );
+
     // =========================
     // NET PROFIT
     // =========================
@@ -217,7 +236,6 @@ exports.getDashboard = async (req, res) => {
       todaySales,
       monthSales,
       monthPurchase,
-
       netProfit,
 
       salesGrowth,
@@ -225,19 +243,18 @@ exports.getDashboard = async (req, res) => {
       profitGrowth,
 
       stockValue,
-
       stockItems: products.length,
 
       lowStockCount,
       outOfStockCount,
 
-      recentSales,
-      lowStockProducts,
-
-      salesChart,
       currentWeekTotal,
       previousWeekTotal,
       weeklyGrowth,
+
+      recentSales,
+      lowStockProducts,
+      salesChart,
     });
   } catch (error) {
     console.error(error);
